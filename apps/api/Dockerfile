@@ -30,7 +30,7 @@ WORKDIR /app
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY apps/api/package.json apps/api/package.json
-RUN pnpm install --filter api --prod --frozen-lockfile
+RUN pnpm install --filter api --prod --frozen-lockfile --ignore-scripts
 
 COPY --from=build /app/apps/api/dist apps/api/dist
 
