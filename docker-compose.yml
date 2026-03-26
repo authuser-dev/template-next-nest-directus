@@ -1,0 +1,39 @@
+name: next-nest-directus
+
+services:
+    api:
+        build:
+            context: .
+            dockerfile: apps/api/Dockerfile
+        ports:
+            - "3000:3000"
+        environment:
+            NODE_ENV: production
+            PORT: "3000"
+
+    web:
+        build:
+            context: .
+            dockerfile: apps/web/Dockerfile
+        ports:
+            - "3001:3001"
+        environment:
+            NODE_ENV: production
+            PORT: "3001"
+            HOSTNAME: "0.0.0.0"
+
+    cms:
+        build:
+            context: apps/cms
+            dockerfile: Dockerfile
+        ports:
+            - "3002:8055"
+        volumes:
+            - ./apps/cms/database:/directus/database
+            - ./apps/cms/uploads:/directus/uploads
+            - ./apps/cms/extensions:/directus/extensions
+        environment:
+            SECRET: "${DIRECTUS_SECRET:-replace-with-random-value}"
+            DB_CLIENT: sqlite3
+            DB_FILENAME: /directus/database/data.db
+            WEBSOCKETS_ENABLED: "true"

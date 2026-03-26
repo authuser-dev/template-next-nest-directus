@@ -10,7 +10,7 @@
 		"check-types": "turbo run check-types",
 		"test": "pnpm --filter api test && pnpm --filter web test && pnpm --filter @repo/ui test",
 		"test:e2e": "pnpm --filter api test:e2e && pnpm --filter web test:e2e",
-		"test:ci": "pnpm lint && pnpm check-types && pnpm test && pnpm test:e2e && pnpm --filter cms validate",
+		"test:ci": "pnpm lint && pnpm check-types && pnpm test && pnpm test:e2e && pnpm --filter cms validate && pnpm docker:compose:validate",
 		"release": "semantic-release",
 		"release:dry": "semantic-release --dry-run",
 		"commitlint": "commitlint --edit",
@@ -19,6 +19,9 @@
 		"docker:build:web": "docker build --file apps/web/Dockerfile --tag next-nest-directus-web:local .",
 		"docker:build:cms": "docker build --file apps/cms/Dockerfile --tag next-nest-directus-cms:local apps/cms",
 		"docker:build": "pnpm docker:build:api && pnpm docker:build:web && pnpm docker:build:cms",
+		"docker:compose:up": "docker compose up --build",
+		"docker:compose:down": "docker compose down",
+		"docker:compose:validate": "docker compose -f docker-compose.yml config -q",
 		"prepare": "husky"
 	},
 	"devDependencies": {

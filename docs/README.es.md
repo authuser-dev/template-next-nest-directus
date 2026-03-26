@@ -88,7 +88,7 @@ Si Docker no está levantado, `pnpm dev` fallará en el proceso `cms`.
 
 ## Flujo CI/CD y Releases
 
-- `pnpm test:ci` ejecuta lint, typecheck, tests unit/e2e y validación de compose de Directus.
+- `pnpm test:ci` ejecuta lint, typecheck, tests unit/e2e y validación de Docker Compose (`apps/cms/docker-compose.yml` y `docker-compose.yml` en la raíz).
 - Los conventional commits se validan localmente con Husky y Commitlint.
 - `semantic-release` genera versión, tags Git, release en GitHub, release en GitLab y `CHANGELOG.md` desde CI/CD.
 - GitHub Actions y GitLab CI incluyen pipelines de verificación y release para la rama por defecto.
@@ -106,17 +106,35 @@ En GitLab, define ambas variables. En GitHub, `GITHUB_TOKEN` ya está disponible
 - `commit-msg`: valida conventional commits
 - `pre-push`: ejecuta la suite completa de verificación local
 
-### Imágenes Docker
+### Docker y Compose
 
-- `apps/api/Dockerfile`: imagen de producción para NestJS
-- `apps/web/Dockerfile`: imagen standalone de producción para Next.js
-- `apps/cms/Dockerfile`: imagen de Directus para despliegue aislado
+Hay **tres Dockerfiles** (una imagen de producción por app). CI construye exactamente estas rutas.
 
-Validación local:
+| App                          | Dockerfile            | Contexto de build          |
+| ---------------------------- | --------------------- | -------------------------- |
+| API (NestJS)                 | `apps/api/Dockerfile` | Raíz del repositorio (`.`) |
+| Web (Next.js standalone)     | `apps/web/Dockerfile` | Raíz del repositorio (`.`) |
+| CMS (Directus + extensiones) | `apps/cms/Dockerfile` | `apps/cms`                 |
+
+Compilar las tres imágenes en local (sin Compose):
 
 ```sh
 pnpm docker:build
 ```
+
+**Archivos Compose**
+
+- **`docker-compose.yml` (raíz del repo)** — Orquesta **api**, **web** y **cms**: cada servicio hace **build** con su Dockerfile (incluida la imagen de CMS desde `apps/cms/Dockerfile`, que incluye `extensions` en la imagen). Los puertos publicados en el host coinciden con [Puertos locales por defecto](#puertos-locales-por-defecto) (`3002` mapea al `8055` interno de Directus). Desde la raíz del repo:
+
+    ```sh
+    pnpm docker:compose:up      # docker compose up --build
+    pnpm docker:compose:down   # docker compose down
+    pnpm docker:compose:validate
+    ```
+
+    En la red por defecto de Compose, los contenedores se resuelven por nombre de servicio (por ejemplo `http://api:3000`, `http://web:3001`, `http://cms:8055`).
+
+- **`apps/cms/docker-compose.yml`** — Levanta **solo Directus** con la imagen **publicada** `directus/directus` (sin `docker build` de `apps/cms/Dockerfile`). Las carpetas de extensiones se montan desde el host. Es lo que usa `pnpm --filter cms dev` desde el paquete `cms`.
 
 ## Agentes y Skills de Copilot
 
@@ -140,7 +158,7 @@ Los placeholders anteriores `.agents/agents/*.ts` no son un formato válido para
 
 - `pnpm test`: tests unitarios (api + web + ui)
 - `pnpm test:e2e`: tests end-to-end (api + web)
-- `pnpm test:ci`: lint + typecheck + tests + validación de compose para cms
+- `pnpm test:ci`: lint + typecheck + tests + validación de Compose (solo cms y stack de la raíz)
 
 Nota para Playwright: en una máquina nueva puede requerir instalación de navegador.
 En CI de este repo, Playwright se instala antes de ejecutar `test:e2e`.
