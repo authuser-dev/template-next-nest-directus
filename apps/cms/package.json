@@ -1,0 +1,12 @@
+{
+	"name": "cms",
+	"version": "0.1.0",
+	"private": true,
+	"scripts": {
+		"dev": "docker compose up",
+		"dev:detached": "docker compose up -d",
+		"stop": "docker compose down",
+		"pull": "docker compose pull",
+		"validate": "docker compose config -q"
+	}
+}

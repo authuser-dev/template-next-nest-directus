@@ -1,0 +1,58 @@
+stages:
+    - test
+    - docker
+    - release
+
+variables:
+    GIT_DEPTH: "0"
+    PNPM_HOME: "/pnpm"
+    PATH: "$PNPM_HOME:$PATH"
+
+.node_job:
+    image: node:24-bookworm
+    before_script:
+        - corepack enable
+        - pnpm install --frozen-lockfile
+        - pnpm --filter web exec playwright install --with-deps chromium
+
+quality:
+    stage: test
+    extends: .node_job
+    script:
+        - pnpm test:ci
+
+docker_api:
+    stage: docker
+    image: docker:27.5.1
+    services:
+        - docker:27.5.1-dind
+    needs: [quality]
+    script:
+        - docker build --file apps/api/Dockerfile --tag next-nest-directus-api:ci .
+
+docker_web:
+    stage: docker
+    image: docker:27.5.1
+    services:
+        - docker:27.5.1-dind
+    needs: [quality]
+    script:
+        - docker build --file apps/web/Dockerfile --tag next-nest-directus-web:ci .
+
+docker_cms:
+    stage: docker
+    image: docker:27.5.1
+    services:
+        - docker:27.5.1-dind
+    needs: [quality]
+    script:
+        - docker build --file apps/cms/Dockerfile --tag next-nest-directus-cms:ci apps/cms
+
+release:
+    stage: release
+    extends: .node_job
+    needs: [quality]
+    rules:
+        - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
+    script:
+        - pnpm release

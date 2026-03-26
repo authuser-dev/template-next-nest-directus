@@ -1,0 +1,60 @@
+name: CI
+
+on:
+    pull_request:
+    push:
+        branches:
+            - main
+            - master
+
+jobs:
+    quality:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v5
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: 9
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v5
+              with:
+                  node-version: 24
+                  cache: pnpm
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Install Playwright browser
+              run: pnpm --filter web exec playwright install --with-deps chromium
+
+            - name: Run quality checks
+              run: pnpm test:ci
+
+    docker:
+        needs: quality
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - app: api
+                      context: .
+                      file: apps/api/Dockerfile
+                    - app: web
+                      context: .
+                      file: apps/web/Dockerfile
+                    - app: cms
+                      context: apps/cms
+                      file: apps/cms/Dockerfile
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v5
+
+            - name: Build image
+              run: docker build --file ${{ matrix.file }} --tag next-nest-directus-${{ matrix.app }}:ci ${{ matrix.context }}

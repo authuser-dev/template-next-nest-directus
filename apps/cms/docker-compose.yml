@@ -1,0 +1,14 @@
+services:
+    directus:
+        image: directus/directus:11.14.1
+        ports:
+            - "3002:8055"
+        volumes:
+            - ./database:/directus/database
+            - ./uploads:/directus/uploads
+            - ./extensions:/directus/extensions
+        environment:
+            SECRET: "${DIRECTUS_SECRET:-replace-with-random-value}"
+            DB_CLIENT: "sqlite3"
+            DB_FILENAME: "/directus/database/data.db"
+            WEBSOCKETS_ENABLED: "true"
