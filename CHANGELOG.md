@@ -1,3 +1,9 @@
+# [1.1.0](https://github.com/authuser-dev/template-next-nest-directus/compare/v1.0.1...v1.1.0) (2026-03-26)
+
+### Features
+
+- se añade tambien arraque grupal de docker-compose ([ee6b5bc](https://github.com/authuser-dev/template-next-nest-directus/commit/ee6b5bc4360bc0dd861aac545e0e84d555f385f3))
+
 ## [1.0.1](https://github.com/authuser-dev/template-next-nest-directus/compare/v1.0.0...v1.0.1) (2026-03-26)
 
 ### Bug Fixes
